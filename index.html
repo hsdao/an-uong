@@ -1,0 +1,2050 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Food - Hệ Thống Gợi Ý Món Ăn Thông Minh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'viet-gold': '#D4AF37',
+                        'viet-red': '#DA020E',
+                        'viet-green': '#228B22',
+                        'bamboo': '#8FBC8F'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .nav-item {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .nav-item:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+        
+        .nav-item.active {
+            background: rgba(212, 175, 55, 0.2);
+            border-bottom: 3px solid #D4AF37;
+        }
+        
+        .mood-selector {
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 12px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+        }
+        
+        .mood-selector:hover {
+            transform: scale(1.15);
+            background: rgba(212, 175, 55, 0.15);
+            border-color: rgba(212, 175, 55, 0.3);
+        }
+        
+        .mood-selector.active {
+            transform: scale(1.2);
+            background: rgba(212, 175, 55, 0.25);
+            border-color: #D4AF37;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        }
+        
+        .slider-container input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 8px;
+            background: linear-gradient(to right, #e5e7eb 0%, #e5e7eb 100%);
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #DA020E, #B91C1C);
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(218, 2, 14, 0.3);
+            border: 2px solid white;
+        }
+        
+        .dish-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            border: 2px solid transparent;
+        }
+        
+        .dish-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border-color: rgba(212, 175, 55, 0.3);
+        }
+        
+        .floating-action {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-circle {
+            transition: stroke-dasharray 0.35s;
+            transform-origin: 50% 50%;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .meal-plan-item {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #D4AF37;
+            transition: all 0.3s ease;
+        }
+        
+        .meal-plan-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .recipe-step {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .ingredient-item {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .health-metric {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .community-post {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .community-post:hover {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="text-3xl">🍜</div>
+                    <div>
+                        <span class="text-xl font-bold text-viet-red">Smart Food</span>
+                        <div class="text-xs text-gray-500">AI Food Recommendation System</div>
+                    </div>
+                </div>
+                
+                <!-- Navigation Menu -->
+                <div class="hidden md:flex items-center space-x-1" id="mainNav">
+                    <div class="nav-item px-4 py-2 rounded-lg font-medium text-gray-700" data-page="home">🏠 Trang chủ</div>
+                    <div class="nav-item px-4 py-2 rounded-lg font-medium text-gray-700" data-page="recommendations">🎯 Gợi ý món ăn</div>
+                    <div class="nav-item px-4 py-2 rounded-lg font-medium text-gray-700" data-page="meal-plan">📅 Kế hoạch ăn uống</div>
+                    <div class="nav-item px-4 py-2 rounded-lg font-medium text-gray-700" data-page="recipes">📖 Công thức</div>
+                    <div class="nav-item px-4 py-2 rounded-lg font-medium text-gray-700" data-page="health">💪 Sức khỏe</div>
+                    <div class="nav-item px-4 py-2 rounded-lg font-medium text-gray-700" data-page="community">👥 Cộng đồng</div>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="flex items-center space-x-4">
+                    <div id="userMenu" class="hidden items-center space-x-3">
+                        <div class="text-sm">
+                            <div class="font-semibold" id="userName">Chào bạn!</div>
+                            <div class="text-gray-500 text-xs" id="userLevel">Level 1</div>
+                        </div>
+                        <img id="userAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23D4AF37'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='16'%3E👤%3C/text%3E%3C/svg%3E" class="w-10 h-10 rounded-full cursor-pointer">
+                        <button id="logoutBtn" class="text-gray-500 hover:text-gray-700">🚪</button>
+                    </div>
+                    <div id="loginSection" class="flex items-center space-x-2">
+                        <button id="loginBtn" class="bg-viet-red text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 transition-all">
+                            Đăng nhập
+                        </button>
+                        <button id="registerBtn" class="border border-viet-red text-viet-red px-4 py-2 rounded-lg font-medium hover:bg-viet-red hover:text-white transition-all">
+                            Đăng ký
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+                <div class="text-4xl mb-4">🍜</div>
+                <h2 class="text-2xl font-bold text-gray-900">Đăng nhập Smart Food</h2>
+                <p class="text-gray-600 mt-2">Trải nghiệm đầy đủ tính năng AI</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email hoặc số điện thoại</label>
+                    <input type="text" id="loginEmail" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red focus:border-transparent" placeholder="example@email.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
+                    <input type="password" id="loginPassword" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red focus:border-transparent" placeholder="••••••••">
+                </div>
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center">
+                        <input type="checkbox" class="rounded border-gray-300 text-viet-red focus:ring-viet-red">
+                        <span class="ml-2 text-sm text-gray-600">Ghi nhớ đăng nhập</span>
+                    </label>
+                    <a href="#" class="text-sm text-viet-red hover:underline">Quên mật khẩu?</a>
+                </div>
+                <button type="submit" class="w-full bg-viet-red text-white py-3 rounded-xl font-semibold hover:bg-red-600 transition-all">
+                    Đăng nhập
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-gray-600">Chưa có tài khoản? 
+                    <button id="switchToRegister" class="text-viet-red font-semibold hover:underline">Đăng ký ngay</button>
+                </p>
+            </div>
+            
+            <button id="closeLoginModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+                <div class="text-4xl mb-4">🎯</div>
+                <h2 class="text-2xl font-bold text-gray-900">Tạo tài khoản Smart Food</h2>
+                <p class="text-gray-600 mt-2">Bắt đầu hành trình ăn uống thông minh</p>
+            </div>
+            
+            <form id="registerForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Họ và tên</label>
+                    <input type="text" id="registerName" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red focus:border-transparent" placeholder="Nguyễn Văn A">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="registerEmail" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red focus:border-transparent" placeholder="example@email.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại</label>
+                    <input type="tel" id="registerPhone" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red focus:border-transparent" placeholder="0123456789">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
+                    <input type="password" id="registerPassword" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red focus:border-transparent" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Xác nhận mật khẩu</label>
+                    <input type="password" id="confirmPassword" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red focus:border-transparent" placeholder="••••••••">
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="agreeTerms" class="rounded border-gray-300 text-viet-red focus:ring-viet-red">
+                    <label for="agreeTerms" class="ml-2 text-sm text-gray-600">
+                        Tôi đồng ý với <a href="#" class="text-viet-red hover:underline">Điều khoản sử dụng</a> và <a href="#" class="text-viet-red hover:underline">Chính sách bảo mật</a>
+                    </label>
+                </div>
+                <button type="submit" class="w-full bg-viet-red text-white py-3 rounded-xl font-semibold hover:bg-red-600 transition-all">
+                    Tạo tài khoản
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-gray-600">Đã có tài khoản? 
+                    <button id="switchToLogin" class="text-viet-red font-semibold hover:underline">Đăng nhập</button>
+                </p>
+            </div>
+            
+            <button id="closeRegisterModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Home Page -->
+        <div id="homePage" class="page active">
+            <!-- Hero Section -->
+            <section class="hero-gradient text-white py-16 relative overflow-hidden rounded-2xl my-8">
+                <div class="absolute inset-0 bg-black/10"></div>
+                <div class="text-center relative z-10 px-8">
+                    <div class="mb-8">
+                        <div class="text-5xl mb-4">🎯</div>
+                        <h1 class="text-4xl md:text-5xl font-bold mb-4 leading-tight">
+                            Hệ Thống Gợi Ý Món Ăn Thông Minh
+                        </h1>
+                        <p class="text-lg md:text-xl mb-6 max-w-3xl mx-auto leading-relaxed">
+                            Sử dụng AI để phân tích <span class="text-yellow-300 font-semibold">6 yếu tố quan trọng</span><br>
+                            và đưa ra gợi ý món ăn hoàn hảo dành riêng cho bạn
+                        </p>
+                        <div class="flex flex-wrap justify-center gap-3 text-sm mb-8">
+                            <span class="bg-white/20 px-3 py-1 rounded-full">🏋️ Sức khỏe</span>
+                            <span class="bg-white/20 px-3 py-1 rounded-full">⏰ Thời gian</span>
+                            <span class="bg-white/20 px-3 py-1 rounded-full">📍 Địa điểm</span>
+                            <span class="bg-white/20 px-3 py-1 rounded-full">😋 Sở thích</span>
+                            <span class="bg-white/20 px-3 py-1 rounded-full">🌦️ Tâm trạng</span>
+                            <span class="bg-white/20 px-3 py-1 rounded-full">🎯 Mục tiêu</span>
+                        </div>
+                        <button class="nav-item bg-white text-viet-red px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition-all transform hover:scale-105" data-page="recommendations">
+                            🚀 Bắt đầu ngay
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Grid -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 py-16">
+                <div class="bg-white rounded-2xl p-8 shadow-lg card-hover text-center">
+                    <div class="text-5xl mb-4">🤖</div>
+                    <h3 class="text-xl font-bold mb-4">AI Thông Minh</h3>
+                    <p class="text-gray-600">Phân tích 6 yếu tố để đưa ra gợi ý món ăn phù hợp nhất với bạn</p>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-8 shadow-lg card-hover text-center">
+                    <div class="text-5xl mb-4">📊</div>
+                    <h3 class="text-xl font-bold mb-4">Theo Dõi Sức Khỏe</h3>
+                    <p class="text-gray-600">Thống kê calories, dinh dưỡng và tiến độ sức khỏe hàng ngày</p>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-8 shadow-lg card-hover text-center">
+                    <div class="text-5xl mb-4">📅</div>
+                    <h3 class="text-xl font-bold mb-4">Kế Hoạch Ăn Uống</h3>
+                    <p class="text-gray-600">Lập kế hoạch bữa ăn thông minh cho cả tuần</p>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-8 shadow-lg card-hover text-center">
+                    <div class="text-5xl mb-4">📖</div>
+                    <h3 class="text-xl font-bold mb-4">Kho Công Thức</h3>
+                    <p class="text-gray-600">Hàng nghìn công thức nấu ăn với hướng dẫn chi tiết</p>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-8 shadow-lg card-hover text-center">
+                    <div class="text-5xl mb-4">👥</div>
+                    <h3 class="text-xl font-bold mb-4">Cộng Đồng</h3>
+                    <p class="text-gray-600">Chia sẻ kinh nghiệm và học hỏi từ cộng đồng yêu ẩm thực</p>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-8 shadow-lg card-hover text-center">
+                    <div class="text-5xl mb-4">🎯</div>
+                    <h3 class="text-xl font-bold mb-4">Cá Nhân Hóa</h3>
+                    <p class="text-gray-600">Điều chỉnh trọng số theo sở thích cá nhân</p>
+                </div>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="bg-white rounded-2xl p-8 shadow-lg my-16">
+                <h2 class="text-3xl font-bold text-center mb-12">📈 Thống Kê Hệ Thống</h2>
+                <div class="grid md:grid-cols-4 gap-8 text-center">
+                    <div>
+                        <div class="text-4xl font-bold text-viet-red mb-2">50,000+</div>
+                        <div class="text-gray-600">Người dùng</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-bold text-viet-red mb-2">1,500+</div>
+                        <div class="text-gray-600">Món ăn</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-bold text-viet-red mb-2">95%</div>
+                        <div class="text-gray-600">Độ chính xác AI</div>
+                    </div>
+                    <div>
+                        <div class="text-4xl font-bold text-viet-red mb-2">24/7</div>
+                        <div class="text-gray-600">Hỗ trợ</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations Page -->
+        <div id="recommendationsPage" class="page py-8">
+            <div class="grid lg:grid-cols-4 gap-8">
+                <!-- Left Sidebar - Controls -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Current Context -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <span class="mr-3">📊</span>
+                            Ngữ cảnh hiện tại
+                        </h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">🕐 Thời gian:</span>
+                                <span class="font-semibold" id="currentTime">Chiều</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">🌤️ Thời tiết:</span>
+                                <span class="font-semibold" id="currentWeather">Nắng ấm</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">📍 Vị trí:</span>
+                                <span class="font-semibold" id="currentLocation">Hà Nội</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">🎯 Bữa ăn:</span>
+                                <span class="font-semibold" id="currentMeal">Bữa tối</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mood Selector -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-6 flex items-center">
+                            <span class="mr-3">💭</span>
+                            Tâm trạng của bạn
+                        </h3>
+                        <div class="grid grid-cols-3 gap-3 justify-items-center">
+                            <div class="text-center">
+                                <div class="mood-selector" data-mood="sad" title="Buồn bã">😢</div>
+                                <div class="text-xs mt-2 text-gray-600 font-medium">Buồn</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="mood-selector" data-mood="tired" title="Mệt mỏi">😴</div>
+                                <div class="text-xs mt-2 text-gray-600 font-medium">Mệt</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="mood-selector" data-mood="stressed" title="Căng thẳng">😰</div>
+                                <div class="text-xs mt-2 text-gray-600 font-medium">Stress</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="mood-selector active" data-mood="normal" title="Bình thường">😊</div>
+                                <div class="text-xs mt-2 text-gray-600 font-medium">Bình thường</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="mood-selector" data-mood="happy" title="Vui vẻ">😄</div>
+                                <div class="text-xs mt-2 text-gray-600 font-medium">Vui</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="mood-selector" data-mood="excited" title="Hứng khởi">🤩</div>
+                                <div class="text-xs mt-2 text-gray-600 font-medium">Hứng khởi</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weight Sliders -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-6">⚖️ Điều chỉnh trọng số</h3>
+                        <div class="space-y-6">
+                            <div class="slider-container">
+                                <div class="flex justify-between mb-3">
+                                    <span class="text-sm font-medium flex items-center">
+                                        <span class="mr-2">🏋️</span>Sức khỏe
+                                    </span>
+                                    <span class="text-sm text-viet-red font-bold" id="healthValue">25%</span>
+                                </div>
+                                <input type="range" id="healthSlider" min="0" max="50" value="25" class="w-full">
+                                <div class="text-xs text-gray-500 mt-1">Ưu tiên món ăn healthy, ít calories</div>
+                            </div>
+                            
+                            <div class="slider-container">
+                                <div class="flex justify-between mb-3">
+                                    <span class="text-sm font-medium flex items-center">
+                                        <span class="mr-2">⏰</span>Thời gian
+                                    </span>
+                                    <span class="text-sm text-viet-red font-bold" id="timeValue">20%</span>
+                                </div>
+                                <input type="range" id="timeSlider" min="0" max="50" value="20" class="w-full">
+                                <div class="text-xs text-gray-500 mt-1">Phù hợp với thời điểm trong ngày</div>
+                            </div>
+                            
+                            <div class="slider-container">
+                                <div class="flex justify-between mb-3">
+                                    <span class="text-sm font-medium flex items-center">
+                                        <span class="mr-2">📍</span>Địa điểm
+                                    </span>
+                                    <span class="text-sm text-viet-red font-bold" id="locationValue">15%</span>
+                                </div>
+                                <input type="range" id="locationSlider" min="0" max="50" value="15" class="w-full">
+                                <div class="text-xs text-gray-500 mt-1">Phù hợp ăn ở nhà/văn phòng/nhà hàng</div>
+                            </div>
+                            
+                            <div class="slider-container">
+                                <div class="flex justify-between mb-3">
+                                    <span class="text-sm font-medium flex items-center">
+                                        <span class="mr-2">😋</span>Sở thích
+                                    </span>
+                                    <span class="text-sm text-viet-red font-bold" id="tasteValue">15%</span>
+                                </div>
+                                <input type="range" id="tasteSlider" min="0" max="50" value="15" class="w-full">
+                                <div class="text-xs text-gray-500 mt-1">Món quen thuộc, dễ ăn</div>
+                            </div>
+                            
+                            <div class="slider-container">
+                                <div class="flex justify-between mb-3">
+                                    <span class="text-sm font-medium flex items-center">
+                                        <span class="mr-2">🌦️</span>Tâm trạng
+                                    </span>
+                                    <span class="text-sm text-viet-red font-bold" id="moodValue">15%</span>
+                                </div>
+                                <input type="range" id="moodSlider" min="0" max="50" value="15" class="w-full">
+                                <div class="text-xs text-gray-500 mt-1">Cải thiện cảm xúc hiện tại</div>
+                            </div>
+                            
+                            <div class="slider-container">
+                                <div class="flex justify-between mb-3">
+                                    <span class="text-sm font-medium flex items-center">
+                                        <span class="mr-2">🎯</span>Mục tiêu
+                                    </span>
+                                    <span class="text-sm text-viet-red font-bold" id="goalValue">10%</span>
+                                </div>
+                                <input type="range" id="goalSlider" min="0" max="50" value="10" class="w-full">
+                                <div class="text-xs text-gray-500 mt-1">Giảm cân/tăng cơ/duy trì sức khỏe</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 p-3 bg-gray-50 rounded-xl">
+                            <div class="text-sm font-semibold text-gray-700 mb-2">📊 Tổng trọng số: <span id="totalWeight">100%</span></div>
+                            <div class="text-xs text-gray-500">Điều chỉnh các thanh trượt để thay đổi độ ưu tiên</div>
+                        </div>
+                        
+                        <button id="updateRecommendations" class="w-full mt-4 bg-gradient-to-r from-viet-red to-red-600 text-white py-3 rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition-all transform hover:scale-105 shadow-lg">
+                            🔄 Cập nhật gợi ý ngay
+                        </button>
+                    </div>
+
+                    <!-- Quick Filters -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">🔍 Bộ lọc nhanh</h3>
+                        <div class="space-y-4">
+                            <select id="regionFilter" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red focus:border-transparent">
+                                <option value="">🗺️ Tất cả miền</option>
+                                <option value="north">🏔️ Miền Bắc</option>
+                                <option value="central">🏛️ Miền Trung</option>
+                                <option value="south">🌴 Miền Nam</option>
+                                <option value="modern">🌟 Hiện đại</option>
+                            </select>
+                            
+                            <select id="mealTypeFilter" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red focus:border-transparent">
+                                <option value="">🍽️ Loại bữa ăn</option>
+                                <option value="breakfast">🌅 Sáng</option>
+                                <option value="lunch">☀️ Trưa</option>
+                                <option value="dinner">🌙 Tối</option>
+                                <option value="snack">🍿 Ăn vặt</option>
+                            </select>
+                            
+                            <select id="dietFilter" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red focus:border-transparent">
+                                <option value="">🥗 Chế độ ăn</option>
+                                <option value="healthy">💚 Healthy</option>
+                                <option value="protein">💪 Protein cao</option>
+                                <option value="lowcal">🔥 Ít calories</option>
+                                <option value="comfort">🏠 Comfort food</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content - Recommendations -->
+                <div class="lg:col-span-3 space-y-6">
+                    <!-- AI Analysis Display -->
+                    <div class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-2xl p-6 shadow-lg">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-2xl font-bold flex items-center">
+                                <span class="mr-3">🤖</span>
+                                Phân tích AI
+                            </h3>
+                            <div class="bg-white/20 px-3 py-1 rounded-full text-sm font-semibold">
+                                <span id="analysisStatus">Đang phân tích...</span>
+                            </div>
+                        </div>
+                        <div id="aiAnalysis" class="text-lg leading-relaxed">
+                            Đang phân tích 6 yếu tố để tìm món ăn hoàn hảo cho bạn...
+                        </div>
+                    </div>
+
+                    <!-- Recommended Dishes -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-semibold flex items-center">
+                                <span class="mr-3">🎯</span>
+                                Gợi ý dành cho bạn
+                            </h3>
+                            <div class="flex items-center space-x-3">
+                                <div class="text-sm text-gray-500">
+                                    Cập nhật: <span id="lastUpdate">vừa xong</span>
+                                </div>
+                                <button id="refreshRecommendations" class="bg-viet-gold text-gray-900 px-4 py-2 rounded-xl font-medium hover:bg-yellow-400 transition-all transform hover:scale-105">
+                                    🔄 Làm mới
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="recommendedDishes" class="grid gap-6">
+                            <!-- Dishes will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Statistics -->
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-2xl p-6 text-center">
+                            <div class="text-3xl mb-2">🎯</div>
+                            <div class="text-2xl font-bold" id="accuracyScore">94%</div>
+                            <div class="text-sm opacity-90">Độ chính xác AI</div>
+                        </div>
+                        <div class="bg-gradient-to-r from-purple-400 to-pink-500 text-white rounded-2xl p-6 text-center">
+                            <div class="text-3xl mb-2">🍜</div>
+                            <div class="text-2xl font-bold" id="dishesAnalyzed">1,247</div>
+                            <div class="text-sm opacity-90">Món đã phân tích</div>
+                        </div>
+                        <div class="bg-gradient-to-r from-orange-400 to-red-500 text-white rounded-2xl p-6 text-center">
+                            <div class="text-3xl mb-2">⚡</div>
+                            <div class="text-2xl font-bold" id="responseTime">0.3s</div>
+                            <div class="text-sm opacity-90">Thời gian phản hồi</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meal Plan Page -->
+        <div id="mealPlanPage" class="page py-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold mb-4">📅 Kế Hoạch Ăn Uống Thông Minh</h1>
+                <p class="text-gray-600">Lập kế hoạch bữa ăn cho cả tuần dựa trên mục tiêu sức khỏe của bạn</p>
+            </div>
+
+            <div class="grid lg:grid-cols-4 gap-8">
+                <!-- Meal Plan Settings -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">⚙️ Cài đặt kế hoạch</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">🎯 Mục tiêu</label>
+                                <select id="planGoal" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red">
+                                    <option value="weightLoss">Giảm cân</option>
+                                    <option value="muscleGain">Tăng cơ</option>
+                                    <option value="maintenance">Duy trì</option>
+                                    <option value="bulking">Tăng cân</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">🔥 Calories mục tiêu/ngày</label>
+                                <input type="number" id="targetCalories" value="2000" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">🍽️ Số bữa ăn/ngày</label>
+                                <select id="mealsPerDay" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red">
+                                    <option value="3">3 bữa chính</option>
+                                    <option value="4">3 bữa + 1 snack</option>
+                                    <option value="5">3 bữa + 2 snack</option>
+                                    <option value="6">6 bữa nhỏ</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">🚫 Thực phẩm tránh</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded border-gray-300 text-viet-red">
+                                        <span class="ml-2 text-sm">Đồ chiên rán</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded border-gray-300 text-viet-red">
+                                        <span class="ml-2 text-sm">Đồ ngọt</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="rounded border-gray-300 text-viet-red">
+                                        <span class="ml-2 text-sm">Thức ăn nhanh</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <button id="generatePlan" class="w-full bg-viet-red text-white py-3 rounded-xl font-semibold hover:bg-red-600 transition-all">
+                                🎯 Tạo kế hoạch mới
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Stats -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">📊 Thống kê tuần</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Calories trung bình</span>
+                                <span class="font-bold text-viet-red">1,950</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Protein (g)</span>
+                                <span class="font-bold text-green-600">125</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Carbs (g)</span>
+                                <span class="font-bold text-blue-600">220</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Fat (g)</span>
+                                <span class="font-bold text-orange-600">65</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Meal Plan -->
+                <div class="lg:col-span-3">
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-2xl font-semibold">🗓️ Kế hoạch tuần này</h3>
+                            <div class="flex space-x-2">
+                                <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition-all">
+                                    ← Tuần trước
+                                </button>
+                                <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition-all">
+                                    Tuần sau →
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="weeklyPlan" class="space-y-6">
+                            <!-- Days will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recipes Page -->
+        <div id="recipesPage" class="page py-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold mb-4">📖 Kho Công Thức Nấu Ăn</h1>
+                <p class="text-gray-600">Khám phá hàng nghìn công thức nấu ăn với hướng dẫn chi tiết từng bước</p>
+            </div>
+
+            <div class="grid lg:grid-cols-4 gap-8">
+                <!-- Recipe Filters -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">🔍 Tìm kiếm công thức</h3>
+                        <div class="space-y-4">
+                            <input type="text" id="recipeSearch" placeholder="Tìm món ăn..." class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red">
+                            
+                            <select id="recipeCategory" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red">
+                                <option value="">Tất cả danh mục</option>
+                                <option value="main">Món chính</option>
+                                <option value="soup">Canh/Súp</option>
+                                <option value="appetizer">Khai vị</option>
+                                <option value="dessert">Tráng miệng</option>
+                                <option value="drink">Đồ uống</option>
+                            </select>
+                            
+                            <select id="recipeDifficulty" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red">
+                                <option value="">Độ khó</option>
+                                <option value="easy">Dễ (< 30 phút)</option>
+                                <option value="medium">Trung bình (30-60 phút)</option>
+                                <option value="hard">Khó (> 60 phút)</option>
+                            </select>
+                            
+                            <select id="recipeServings" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red">
+                                <option value="">Số người ăn</option>
+                                <option value="1-2">1-2 người</option>
+                                <option value="3-4">3-4 người</option>
+                                <option value="5+">5+ người</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Popular Tags -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">🏷️ Tags phổ biến</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-viet-gold/20 text-viet-gold px-3 py-1 rounded-full text-sm cursor-pointer hover:bg-viet-gold/30">#healthy</span>
+                            <span class="bg-viet-red/20 text-viet-red px-3 py-1 rounded-full text-sm cursor-pointer hover:bg-viet-red/30">#nhanh-gọn</span>
+                            <span class="bg-green-200 text-green-800 px-3 py-1 rounded-full text-sm cursor-pointer hover:bg-green-300">#chay</span>
+                            <span class="bg-blue-200 text-blue-800 px-3 py-1 rounded-full text-sm cursor-pointer hover:bg-blue-300">#protein-cao</span>
+                            <span class="bg-purple-200 text-purple-800 px-3 py-1 rounded-full text-sm cursor-pointer hover:bg-purple-300">#ít-carb</span>
+                            <span class="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm cursor-pointer hover:bg-orange-300">#truyền-thống</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recipe Grid -->
+                <div class="lg:col-span-3">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="text-gray-600">
+                            Tìm thấy <span class="font-semibold text-viet-red">1,247</span> công thức
+                        </div>
+                        <select class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-viet-red">
+                            <option>Sắp xếp theo độ phổ biến</option>
+                            <option>Mới nhất</option>
+                            <option>Đánh giá cao nhất</option>
+                            <option>Thời gian nấu</option>
+                        </select>
+                    </div>
+
+                    <div id="recipeGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <!-- Recipes will be populated by JavaScript -->
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="flex justify-center mt-12">
+                        <div class="flex space-x-2">
+                            <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">←</button>
+                            <button class="px-4 py-2 bg-viet-red text-white rounded-lg">1</button>
+                            <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">2</button>
+                            <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">3</button>
+                            <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">...</button>
+                            <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">15</button>
+                            <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">→</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Page -->
+        <div id="healthPage" class="page py-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold mb-4">💪 Theo Dõi Sức Khỏe</h1>
+                <p class="text-gray-600">Thống kê chi tiết về dinh dưỡng và tiến độ sức khỏe của bạn</p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Health Metrics -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Daily Overview -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-2xl font-semibold mb-6">📊 Tổng quan hôm nay</h3>
+                        <div class="grid md:grid-cols-4 gap-6">
+                            <div class="health-metric">
+                                <div class="text-3xl mb-2">🔥</div>
+                                <div class="text-2xl font-bold">1,650</div>
+                                <div class="text-sm opacity-90">/ 2,000 calories</div>
+                                <div class="w-full bg-white/20 rounded-full h-2 mt-2">
+                                    <div class="bg-white h-2 rounded-full" style="width: 82.5%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="health-metric">
+                                <div class="text-3xl mb-2">🥩</div>
+                                <div class="text-2xl font-bold">95g</div>
+                                <div class="text-sm opacity-90">/ 120g protein</div>
+                                <div class="w-full bg-white/20 rounded-full h-2 mt-2">
+                                    <div class="bg-white h-2 rounded-full" style="width: 79%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="health-metric">
+                                <div class="text-3xl mb-2">🍞</div>
+                                <div class="text-2xl font-bold">180g</div>
+                                <div class="text-sm opacity-90">/ 250g carbs</div>
+                                <div class="w-full bg-white/20 rounded-full h-2 mt-2">
+                                    <div class="bg-white h-2 rounded-full" style="width: 72%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="health-metric">
+                                <div class="text-3xl mb-2">🥑</div>
+                                <div class="text-2xl font-bold">45g</div>
+                                <div class="text-sm opacity-90">/ 65g fat</div>
+                                <div class="w-full bg-white/20 rounded-full h-2 mt-2">
+                                    <div class="bg-white h-2 rounded-full" style="width: 69%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Chart -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-2xl font-semibold mb-6">📈 Biểu đồ tuần</h3>
+                        <div class="chart-container bg-gray-50 rounded-xl p-4">
+                            <div class="text-center text-gray-500 mt-20">
+                                📊 Biểu đồ calories và dinh dưỡng 7 ngày qua
+                                <br><small>Tính năng biểu đồ sẽ được tích hợp với thư viện Chart.js</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Meal History -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-2xl font-semibold mb-6">🍽️ Lịch sử bữa ăn hôm nay</h3>
+                        <div class="space-y-4" id="mealHistory">
+                            <!-- Meal history will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Sidebar -->
+                <div class="space-y-6">
+                    <!-- Quick Add Meal -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">➕ Thêm bữa ăn</h3>
+                        <div class="space-y-4">
+                            <input type="text" placeholder="Tìm món ăn..." class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red">
+                            <select class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-viet-red">
+                                <option>Bữa sáng</option>
+                                <option>Bữa trưa</option>
+                                <option>Bữa tối</option>
+                                <option>Ăn vặt</option>
+                            </select>
+                            <button class="w-full bg-viet-red text-white py-3 rounded-xl font-semibold hover:bg-red-600 transition-all">
+                                Thêm vào nhật ký
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Health Goals -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">🎯 Mục tiêu sức khỏe</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm">Giảm cân</span>
+                                <span class="text-sm font-bold text-green-600">-2.5kg</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" style="width: 50%"></div>
+                            </div>
+                            <div class="text-xs text-gray-500">Còn 2.5kg nữa để đạt mục tiêu</div>
+                        </div>
+                    </div>
+
+                    <!-- Water Intake -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">💧 Lượng nước</h3>
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">💧</div>
+                            <div class="text-2xl font-bold text-blue-600">1.8L</div>
+                            <div class="text-sm text-gray-500 mb-4">/ 2.5L mục tiêu</div>
+                            <div class="grid grid-cols-4 gap-2 mb-4">
+                                <div class="bg-blue-500 h-8 rounded"></div>
+                                <div class="bg-blue-500 h-8 rounded"></div>
+                                <div class="bg-blue-500 h-8 rounded"></div>
+                                <div class="bg-blue-500 h-8 rounded"></div>
+                                <div class="bg-blue-500 h-8 rounded"></div>
+                                <div class="bg-blue-500 h-8 rounded"></div>
+                                <div class="bg-blue-500 h-8 rounded"></div>
+                                <div class="bg-gray-200 h-8 rounded"></div>
+                                <div class="bg-gray-200 h-8 rounded"></div>
+                                <div class="bg-gray-200 h-8 rounded"></div>
+                            </div>
+                            <button class="bg-blue-500 text-white px-4 py-2 rounded-xl hover:bg-blue-600 transition-all">
+                                + Thêm 250ml
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Summary -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">📋 Tóm tắt tuần</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between">
+                                <span>Calories trung bình</span>
+                                <span class="font-bold">1,920</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Ngày đạt mục tiêu</span>
+                                <span class="font-bold text-green-600">5/7</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Bữa ăn healthy</span>
+                                <span class="font-bold text-green-600">18/21</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Điểm sức khỏe</span>
+                                <span class="font-bold text-viet-gold">85/100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Community Page -->
+        <div id="communityPage" class="page py-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold mb-4">👥 Cộng Đồng Ẩm Thực</h1>
+                <p class="text-gray-600">Chia sẻ kinh nghiệm, học hỏi và kết nối với những người yêu ẩm thực</p>
+            </div>
+
+            <div class="grid lg:grid-cols-4 gap-8">
+                <!-- Community Sidebar -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Create Post -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">✍️ Tạo bài viết</h3>
+                        <button class="w-full bg-viet-red text-white py-3 rounded-xl font-semibold hover:bg-red-600 transition-all mb-3">
+                            📝 Chia sẻ công thức
+                        </button>
+                        <button class="w-full bg-viet-gold text-gray-900 py-3 rounded-xl font-semibold hover:bg-yellow-400 transition-all mb-3">
+                            📸 Đăng ảnh món ăn
+                        </button>
+                        <button class="w-full bg-green-500 text-white py-3 rounded-xl font-semibold hover:bg-green-600 transition-all">
+                            💬 Đặt câu hỏi
+                        </button>
+                    </div>
+
+                    <!-- Popular Topics -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">🔥 Chủ đề hot</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">#món-ăn-healthy</span>
+                                <span class="text-xs bg-viet-red text-white px-2 py-1 rounded-full">1.2k</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">#giảm-cân</span>
+                                <span class="text-xs bg-viet-red text-white px-2 py-1 rounded-full">856</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">#nấu-ăn-nhanh</span>
+                                <span class="text-xs bg-viet-red text-white px-2 py-1 rounded-full">743</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">#món-chay</span>
+                                <span class="text-xs bg-viet-red text-white px-2 py-1 rounded-full">621</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm">#ẩm-thực-việt</span>
+                                <span class="text-xs bg-viet-red text-white px-2 py-1 rounded-full">589</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Contributors -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">⭐ Người đóng góp hàng đầu</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-viet-gold rounded-full flex items-center justify-center text-white font-bold">1</div>
+                                <div>
+                                    <div class="font-semibold text-sm">Chef Minh</div>
+                                    <div class="text-xs text-gray-500">245 công thức</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center text-white font-bold">2</div>
+                                <div>
+                                    <div class="font-semibold text-sm">Healthy Mom</div>
+                                    <div class="text-xs text-gray-500">198 công thức</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center text-white font-bold">3</div>
+                                <div>
+                                    <div class="font-semibold text-sm">Foodie Hà Nội</div>
+                                    <div class="text-xs text-gray-500">156 công thức</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Community Feed -->
+                <div class="lg:col-span-3">
+                    <!-- Filter Tabs -->
+                    <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                        <div class="flex space-x-4">
+                            <button class="px-4 py-2 bg-viet-red text-white rounded-xl font-medium">🔥 Mới nhất</button>
+                            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200">⭐ Phổ biến</button>
+                            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200">👥 Đang theo dõi</button>
+                            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200">❓ Câu hỏi</button>
+                        </div>
+                    </div>
+
+                    <!-- Community Posts -->
+                    <div id="communityFeed" class="space-y-6">
+                        <!-- Posts will be populated by JavaScript -->
+                    </div>
+
+                    <!-- Load More -->
+                    <div class="text-center mt-8">
+                        <button class="bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-200 transition-all">
+                            Xem thêm bài viết
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating AI Chat Button -->
+    <div class="floating-action">
+        <button id="aiChatBtn" class="bg-gradient-to-r from-viet-gold to-yellow-400 text-gray-900 p-4 rounded-full shadow-2xl hover:from-yellow-400 hover:to-yellow-500 transition-all transform hover:scale-110 pulse">
+            <div class="text-2xl">🤖</div>
+        </button>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification bg-white rounded-xl shadow-2xl p-4 max-w-sm">
+        <div class="flex items-center space-x-3">
+            <div class="text-2xl" id="notificationIcon">✅</div>
+            <div>
+                <div class="font-semibold" id="notificationTitle">Thành công!</div>
+                <div class="text-sm text-gray-600" id="notificationMessage">Thao tác đã được thực hiện</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables and data
+        let currentUser = null;
+        let currentPage = 'home';
+        let selectedMood = 'normal';
+        let userWeights = {
+            health: 25,
+            time: 20,
+            location: 15,
+            taste: 15,
+            mood: 15,
+            goal: 10
+        };
+
+        // Sample data
+        const dishes = [
+            {
+                id: 1,
+                name: "Phở Bò Hà Nội",
+                region: "north",
+                type: "breakfast",
+                calories: 350,
+                protein: 25,
+                carbs: 45,
+                fat: 8,
+                fiber: 3,
+                image: "🍜",
+                description: "Món phở truyền thống với nước dùng trong vắt, thịt bò tươi ngon và bánh phở dai ngon",
+                price: "45,000đ",
+                prepTime: 5,
+                healthScore: 85,
+                comfortLevel: 95,
+                timeScores: { morning: 95, afternoon: 70, evening: 60, night: 40 },
+                locationScores: { home: 60, office: 40, restaurant: 95, street: 80 },
+                weatherScores: { hot: 60, cold: 95, rainy: 90 },
+                moodBoosts: { sad: 25, tired: 20, stressed: 30, happy: 15, excited: 10, normal: 20 },
+                goalAlignment: { weightLoss: 70, muscleGain: 80, maintenance: 90, energy: 85 },
+                tasteProfile: { familiar: 95, adventurous: 30, comfort: 90, healthy: 75 },
+                ingredients: ["thịt bò", "bánh phở", "hành lá", "ngò gai", "gừng"],
+                tags: ["truyền thống", "nóng", "đậm đà", "bổ dưỡng", "miền bắc"]
+            },
+            {
+                id: 2,
+                name: "Salad Quinoa Bơ",
+                region: "modern",
+                type: "lunch",
+                calories: 280,
+                protein: 15,
+                carbs: 25,
+                fat: 18,
+                fiber: 12,
+                image: "🥗",
+                description: "Salad quinoa với bơ, cà chua cherry, dưa chuột và sốt chanh dây tươi mát",
+                price: "75,000đ",
+                prepTime: 10,
+                healthScore: 95,
+                comfortLevel: 60,
+                timeScores: { morning: 70, afternoon: 95, evening: 80, night: 50 },
+                locationScores: { home: 85, office: 90, restaurant: 80, street: 30 },
+                weatherScores: { hot: 95, cold: 40, rainy: 70 },
+                moodBoosts: { sad: 10, tired: 30, stressed: 20, happy: 25, excited: 20, normal: 20 },
+                goalAlignment: { weightLoss: 95, muscleGain: 60, maintenance: 85, energy: 90 },
+                tasteProfile: { familiar: 40, adventurous: 80, comfort: 30, healthy: 95 },
+                ingredients: ["quinoa", "bơ", "cà chua cherry", "dưa chuột", "chanh dây"],
+                tags: ["healthy", "superfood", "ít calories", "tươi mát", "hiện đại"]
+            },
+            {
+                id: 3,
+                name: "Bún Bò Huế",
+                region: "central",
+                type: "lunch",
+                calories: 420,
+                protein: 28,
+                carbs: 55,
+                fat: 15,
+                fiber: 4,
+                image: "🍲",
+                description: "Bún bò cay nồng đặc trưng miền Trung với chả cua, giò heo và nước dùng đậm đà",
+                price: "50,000đ",
+                prepTime: 8,
+                healthScore: 75,
+                comfortLevel: 90,
+                timeScores: { morning: 60, afternoon: 95, evening: 80, night: 50 },
+                locationScores: { home: 70, office: 50, restaurant: 90, street: 85 },
+                weatherScores: { hot: 70, cold: 90, rainy: 95 },
+                moodBoosts: { sad: 20, tired: 15, stressed: 10, happy: 30, excited: 35, normal: 25 },
+                goalAlignment: { weightLoss: 60, muscleGain: 75, maintenance: 85, energy: 80 },
+                tasteProfile: { familiar: 85, adventurous: 60, comfort: 85, healthy: 70 },
+                ingredients: ["bún", "thịt bò", "chả cua", "giò heo", "sả", "ớt"],
+                tags: ["cay", "đậm đà", "miền trung", "nóng hổi", "truyền thống"]
+            }
+        ];
+
+        const recipes = [
+            {
+                id: 1,
+                name: "Phở Bò Hà Nội",
+                image: "🍜",
+                difficulty: "medium",
+                time: 45,
+                servings: 4,
+                rating: 4.8,
+                category: "main",
+                description: "Công thức phở bò truyền thống Hà Nội với nước dùng trong vắt",
+                ingredients: [
+                    { name: "Xương bò", amount: "1kg", calories: 200 },
+                    { name: "Thịt bò", amount: "500g", calories: 800 },
+                    { name: "Bánh phở", amount: "400g", calories: 400 },
+                    { name: "Hành tây", amount: "2 củ", calories: 80 },
+                    { name: "Gừng", amount: "50g", calories: 20 }
+                ],
+                steps: [
+                    "Ninh xương bò trong 3-4 tiếng để có nước dùng trong",
+                    "Nướng hành tây và gừng cho thơm",
+                    "Thêm gia vị: hồi, quế, thảo quả",
+                    "Luộc bánh phở và thái thịt bò mỏng",
+                    "Trình bày và thưởng thức nóng"
+                ],
+                tags: ["truyền thống", "miền bắc", "nóng hổi"],
+                nutrition: { calories: 350, protein: 25, carbs: 45, fat: 8 }
+            },
+            {
+                id: 2,
+                name: "Salad Quinoa Healthy",
+                image: "🥗",
+                difficulty: "easy",
+                time: 20,
+                servings: 2,
+                rating: 4.6,
+                category: "main",
+                description: "Salad quinoa bổ dưỡng với rau củ tươi và sốt chanh dây",
+                ingredients: [
+                    { name: "Quinoa", amount: "200g", calories: 220 },
+                    { name: "Bơ", amount: "1 trái", calories: 160 },
+                    { name: "Cà chua cherry", amount: "150g", calories: 30 },
+                    { name: "Dưa chuột", amount: "1 trái", calories: 15 },
+                    { name: "Chanh dây", amount: "2 trái", calories: 20 }
+                ],
+                steps: [
+                    "Nấu quinoa theo hướng dẫn trên bao bì",
+                    "Thái bơ, cà chua cherry và dưa chuột",
+                    "Pha sốt chanh dây với mật ong",
+                    "Trộn tất cả nguyên liệu với sốt",
+                    "Trang trí và thưởng thức"
+                ],
+                tags: ["healthy", "superfood", "ít calories"],
+                nutrition: { calories: 280, protein: 15, carbs: 25, fat: 18 }
+            }
+        ];
+
+        const communityPosts = [
+            {
+                id: 1,
+                author: "Chef Minh",
+                avatar: "👨‍🍳",
+                time: "2 giờ trước",
+                type: "recipe",
+                title: "Bí quyết làm phở bò nước dùng trong vắt",
+                content: "Sau 10 năm làm nghề, tôi muốn chia sẻ bí quyết để có nước dùng phở trong vắt và thơm ngon. Điều quan trọng nhất là...",
+                image: "🍜",
+                likes: 245,
+                comments: 32,
+                shares: 18,
+                tags: ["phở", "bí-quyết", "nước-dùng"]
+            },
+            {
+                id: 2,
+                author: "Healthy Mom",
+                avatar: "👩‍🍳",
+                time: "4 giờ trước",
+                type: "photo",
+                title: "Bữa sáng healthy cho cả gia đình",
+                content: "Smoothie bowl với granola tự làm và trái cây tươi. Các bé rất thích và đầy đủ dinh dưỡng cho ngày mới!",
+                image: "🍓",
+                likes: 189,
+                comments: 24,
+                shares: 12,
+                tags: ["healthy", "bữa-sáng", "gia-đình"]
+            },
+            {
+                id: 3,
+                author: "Foodie Hà Nội",
+                avatar: "🍽️",
+                time: "6 giờ trước",
+                type: "question",
+                title: "Làm sao để bánh mì giòn lâu hơn?",
+                content: "Mình hay làm bánh mì ở nhà nhưng không giòn được lâu như ngoài hàng. Có bạn nào biết bí quyết không ạ?",
+                image: "🥖",
+                likes: 67,
+                comments: 45,
+                shares: 8,
+                tags: ["bánh-mì", "câu-hỏi", "bí-quyết"]
+            }
+        ];
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeNavigation();
+            initializeAuth();
+            initializeRecommendations();
+            initializeMealPlan();
+            initializeRecipes();
+            initializeHealth();
+            initializeCommunity();
+            
+            // Check for saved user session
+            const savedUser = localStorage.getItem('smartFoodUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showUserMenu();
+            }
+            
+            updateCurrentContext();
+            setInterval(updateCurrentContext, 30000);
+        });
+
+        // Navigation system
+        function initializeNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const targetPage = this.dataset.page;
+                    if (targetPage) {
+                        navigateToPage(targetPage);
+                    }
+                });
+            });
+        }
+
+        function navigateToPage(pageName) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show target page
+            const targetPage = document.getElementById(pageName + 'Page');
+            if (targetPage) {
+                targetPage.classList.add('active');
+                currentPage = pageName;
+                
+                // Update navigation active state
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+                
+                // Load page-specific content
+                loadPageContent(pageName);
+            }
+        }
+
+        function loadPageContent(pageName) {
+            switch(pageName) {
+                case 'recommendations':
+                    updateRecommendations();
+                    break;
+                case 'meal-plan':
+                    generateWeeklyPlan();
+                    break;
+                case 'recipes':
+                    displayRecipes();
+                    break;
+                case 'health':
+                    updateHealthData();
+                    break;
+                case 'community':
+                    displayCommunityPosts();
+                    break;
+            }
+        }
+
+        // Authentication system
+        function initializeAuth() {
+            const loginBtn = document.getElementById('loginBtn');
+            const registerBtn = document.getElementById('registerBtn');
+            const loginModal = document.getElementById('loginModal');
+            const registerModal = document.getElementById('registerModal');
+            const closeLoginModal = document.getElementById('closeLoginModal');
+            const closeRegisterModal = document.getElementById('closeRegisterModal');
+            const switchToRegister = document.getElementById('switchToRegister');
+            const switchToLogin = document.getElementById('switchToLogin');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            loginBtn.addEventListener('click', () => showModal(loginModal));
+            registerBtn.addEventListener('click', () => showModal(registerModal));
+            closeLoginModal.addEventListener('click', () => hideModal(loginModal));
+            closeRegisterModal.addEventListener('click', () => hideModal(registerModal));
+            
+            switchToRegister.addEventListener('click', () => {
+                hideModal(loginModal);
+                showModal(registerModal);
+            });
+            
+            switchToLogin.addEventListener('click', () => {
+                hideModal(registerModal);
+                showModal(loginModal);
+            });
+
+            loginForm.addEventListener('submit', handleLogin);
+            registerForm.addEventListener('submit', handleRegister);
+            logoutBtn.addEventListener('click', handleLogout);
+        }
+
+        function showModal(modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function hideModal(modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            // Simulate login (in real app, this would be an API call)
+            if (email && password) {
+                currentUser = {
+                    id: 1,
+                    name: email.split('@')[0] || 'User',
+                    email: email,
+                    level: 1,
+                    joinDate: new Date().toISOString(),
+                    preferences: { ...userWeights },
+                    history: []
+                };
+                
+                localStorage.setItem('smartFoodUser', JSON.stringify(currentUser));
+                showUserMenu();
+                hideModal(document.getElementById('loginModal'));
+                showNotification('✅', 'Đăng nhập thành công!', 'Chào mừng bạn quay lại Smart Food');
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const phone = document.getElementById('registerPhone').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+            
+            if (!agreeTerms) {
+                showNotification('⚠️', 'Lỗi', 'Vui lòng đồng ý với điều khoản sử dụng');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showNotification('⚠️', 'Lỗi', 'Mật khẩu xác nhận không khớp');
+                return;
+            }
+            
+            if (name && email && password) {
+                currentUser = {
+                    id: Date.now(),
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    level: 1,
+                    joinDate: new Date().toISOString(),
+                    preferences: { ...userWeights },
+                    history: []
+                };
+                
+                localStorage.setItem('smartFoodUser', JSON.stringify(currentUser));
+                showUserMenu();
+                hideModal(document.getElementById('registerModal'));
+                showNotification('🎉', 'Đăng ký thành công!', 'Chào mừng bạn đến với Smart Food');
+            }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('smartFoodUser');
+            hideUserMenu();
+            navigateToPage('home');
+            showNotification('👋', 'Đăng xuất thành công', 'Hẹn gặp lại bạn!');
+        }
+
+        function showUserMenu() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('userMenu').classList.remove('hidden');
+            document.getElementById('userMenu').classList.add('flex');
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userLevel').textContent = `Level ${currentUser.level}`;
+        }
+
+        function hideUserMenu() {
+            document.getElementById('userMenu').classList.add('hidden');
+            document.getElementById('userMenu').classList.remove('flex');
+            document.getElementById('loginSection').classList.remove('hidden');
+        }
+
+        // Recommendations system (from previous code)
+        function initializeRecommendations() {
+            initializeSliders();
+            initializeMoodSelectors();
+            initializeFilters();
+            
+            document.getElementById('updateRecommendations').addEventListener('click', updateRecommendations);
+            document.getElementById('refreshRecommendations').addEventListener('click', updateRecommendations);
+        }
+
+        function initializeSliders() {
+            const sliders = ['health', 'time', 'location', 'taste', 'mood', 'goal'];
+            sliders.forEach(slider => {
+                const sliderElement = document.getElementById(slider + 'Slider');
+                const valueElement = document.getElementById(slider + 'Value');
+                
+                if (sliderElement && valueElement) {
+                    sliderElement.addEventListener('input', function() {
+                        const value = parseInt(this.value);
+                        userWeights[slider] = value;
+                        valueElement.textContent = value + '%';
+                        updateTotalWeight();
+                        
+                        clearTimeout(window.sliderTimeout);
+                        window.sliderTimeout = setTimeout(updateRecommendations, 500);
+                    });
+                }
+            });
+        }
+
+        function initializeMoodSelectors() {
+            const moodSelectors = document.querySelectorAll('.mood-selector');
+            moodSelectors.forEach(selector => {
+                selector.addEventListener('click', function() {
+                    moodSelectors.forEach(s => s.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedMood = this.dataset.mood;
+                    updateRecommendations();
+                });
+            });
+        }
+
+        function initializeFilters() {
+            ['regionFilter', 'mealTypeFilter', 'dietFilter'].forEach(filterId => {
+                const element = document.getElementById(filterId);
+                if (element) {
+                    element.addEventListener('change', updateRecommendations);
+                }
+            });
+        }
+
+        function updateTotalWeight() {
+            const total = Object.values(userWeights).reduce((sum, weight) => sum + weight, 0);
+            const totalElement = document.getElementById('totalWeight');
+            if (totalElement) {
+                totalElement.textContent = total + '%';
+            }
+        }
+
+        function updateCurrentContext() {
+            const now = new Date();
+            const hour = now.getHours();
+            
+            let timeText = '';
+            if (hour >= 5 && hour < 11) timeText = 'Sáng';
+            else if (hour >= 11 && hour < 14) timeText = 'Trưa';
+            else if (hour >= 14 && hour < 18) timeText = 'Chiều';
+            else if (hour >= 18 && hour < 22) timeText = 'Tối';
+            else timeText = 'Đêm';
+            
+            const timeElement = document.getElementById('currentTime');
+            if (timeElement) timeElement.textContent = timeText;
+            
+            const weatherOptions = ['Nắng ấm', 'Mát mẻ', 'Mưa nhẹ', 'Nóng', 'Se lạnh'];
+            const weatherElement = document.getElementById('currentWeather');
+            if (weatherElement) {
+                weatherElement.textContent = weatherOptions[Math.floor(Math.random() * weatherOptions.length)];
+            }
+            
+            let mealText = '';
+            if (hour >= 6 && hour < 10) mealText = 'Bữa sáng';
+            else if (hour >= 11 && hour < 14) mealText = 'Bữa trưa';
+            else if (hour >= 17 && hour < 21) mealText = 'Bữa tối';
+            else mealText = 'Ăn vặt';
+            
+            const mealElement = document.getElementById('currentMeal');
+            if (mealElement) mealElement.textContent = mealText;
+        }
+
+        function updateRecommendations() {
+            const analysisStatus = document.getElementById('analysisStatus');
+            const aiAnalysis = document.getElementById('aiAnalysis');
+            
+            if (analysisStatus) analysisStatus.textContent = 'Đang phân tích...';
+            if (aiAnalysis) aiAnalysis.innerHTML = '🧠 Đang phân tích 6 yếu tố để tìm món ăn hoàn hảo...';
+            
+            setTimeout(() => {
+                const recommendations = calculateRecommendations();
+                displayRecommendations(recommendations);
+                updateAIAnalysis(recommendations);
+                updateStats();
+                
+                if (analysisStatus) analysisStatus.textContent = 'Hoàn thành';
+                const lastUpdate = document.getElementById('lastUpdate');
+                if (lastUpdate) lastUpdate.textContent = 'vừa xong';
+            }, 1000);
+        }
+
+        function calculateRecommendations() {
+            // Simplified recommendation calculation
+            const scoredDishes = dishes.map(dish => ({
+                ...dish,
+                totalScore: Math.floor(Math.random() * 40) + 60,
+                matchPercentage: Math.floor(Math.random() * 30) + 70,
+                reasons: ['Phù hợp với tâm trạng hiện tại', 'Healthy và bổ dưỡng', 'Dễ chế biến']
+            }));
+            
+            scoredDishes.sort((a, b) => b.totalScore - a.totalScore);
+            
+            return {
+                dishes: scoredDishes.slice(0, 6),
+                context: {
+                    mood: selectedMood,
+                    weights: { ...userWeights }
+                }
+            };
+        }
+
+        function displayRecommendations(recommendations) {
+            const container = document.getElementById('recommendedDishes');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            recommendations.dishes.forEach(dish => {
+                const dishCard = document.createElement('div');
+                dishCard.className = 'dish-card p-6 cursor-pointer';
+                
+                dishCard.innerHTML = `
+                    <div class="flex items-start space-x-4">
+                        <div class="text-6xl flex-shrink-0">${dish.image}</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between mb-3">
+                                <div>
+                                    <h4 class="font-bold text-xl text-gray-900 leading-tight mb-1">${dish.name}</h4>
+                                    <div class="flex items-center space-x-2 text-sm text-gray-500">
+                                        <span class="bg-viet-gold/20 text-viet-gold px-2 py-1 rounded-lg">${getRegionText(dish.region)}</span>
+                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-lg">${getTypeText(dish.type)}</span>
+                                    </div>
+                                </div>
+                                <div class="text-right ml-4">
+                                    <div class="text-2xl font-bold text-viet-gold">${dish.matchPercentage}%</div>
+                                    <div class="text-xs text-gray-500">Phù hợp</div>
+                                </div>
+                            </div>
+                            
+                            <p class="text-gray-600 text-sm mb-4 leading-relaxed">${dish.description}</p>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-4">
+                                <div class="bg-orange-50 text-orange-800 px-2 py-1 rounded-lg text-center">
+                                    <div class="font-bold">${dish.calories}</div>
+                                    <div>calories</div>
+                                </div>
+                                <div class="bg-blue-50 text-blue-800 px-2 py-1 rounded-lg text-center">
+                                    <div class="font-bold">${dish.protein}g</div>
+                                    <div>protein</div>
+                                </div>
+                                <div class="bg-green-50 text-green-800 px-2 py-1 rounded-lg text-center">
+                                    <div class="font-bold">${dish.prepTime}p</div>
+                                    <div>chuẩn bị</div>
+                                </div>
+                                <div class="bg-purple-50 text-purple-800 px-2 py-1 rounded-lg text-center">
+                                    <div class="font-bold">${dish.price}</div>
+                                    <div>giá</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-wrap gap-2">
+                                <button class="bg-gradient-to-r from-viet-red to-red-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:from-red-600 hover:to-red-700 transition-all transform hover:scale-105" onclick="orderDish(${dish.id})">
+                                    🛵 Đặt món
+                                </button>
+                                <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-gray-200 transition-all" onclick="viewRecipe(${dish.id})">
+                                    📝 Công thức
+                                </button>
+                                <button class="bg-pink-100 text-pink-700 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-pink-200 transition-all" onclick="addToFavorites(${dish.id})">
+                                    ❤️ Yêu thích
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(dishCard);
+            });
+        }
+
+        function updateAIAnalysis(recommendations) {
+            const aiAnalysis = document.getElementById('aiAnalysis');
+            if (!aiAnalysis) return;
+            
+            const topDish = recommendations.dishes[0];
+            
+            const analysisText = `
+                <div class="space-y-3">
+                    <p class="text-lg">
+                        🎯 Dựa trên phân tích <strong>6 yếu tố</strong>, tôi gợi ý <strong>${topDish.name}</strong> 
+                        với độ phù hợp <strong>${topDish.matchPercentage}%</strong>
+                    </p>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                        <div class="bg-white/20 rounded-lg p-3">
+                            <div class="font-semibold">Tâm trạng</div>
+                            <div>${getMoodText(selectedMood)}</div>
+                        </div>
+                        <div class="bg-white/20 rounded-lg p-3">
+                            <div class="font-semibold">Calories</div>
+                            <div>${topDish.calories} kcal</div>
+                        </div>
+                        <div class="bg-white/20 rounded-lg p-3">
+                            <div class="font-semibold">Thời gian</div>
+                            <div>${topDish.prepTime} phút</div>
+                        </div>
+                    </div>
+                    <p class="text-sm opacity-90">
+                        💡 AI đã phân tích ${dishes.length} món ăn và chọn ra những món phù hợp nhất với sở thích của bạn
+                    </p>
+                </div>
+            `;
+            
+            aiAnalysis.innerHTML = analysisText;
+        }
+
+        function updateStats() {
+            const accuracy = 92 + Math.floor(Math.random() * 6);
+            const analyzed = 1200 + Math.floor(Math.random() * 100);
+            const responseTime = (0.2 + Math.random() * 0.3).toFixed(1);
+            
+            const accuracyElement = document.getElementById('accuracyScore');
+            const analyzedElement = document.getElementById('dishesAnalyzed');
+            const responseElement = document.getElementById('responseTime');
+            
+            if (accuracyElement) accuracyElement.textContent = accuracy + '%';
+            if (analyzedElement) analyzedElement.textContent = analyzed.toLocaleString();
+            if (responseElement) responseElement.textContent = responseTime + 's';
+        }
+
+        // Meal Plan system
+        function initializeMealPlan() {
+            const generateBtn = document.getElementById('generatePlan');
+            if (generateBtn) {
+                generateBtn.addEventListener('click', generateWeeklyPlan);
+            }
+        }
+
+        function generateWeeklyPlan() {
+            const container = document.getElementById('weeklyPlan');
+            if (!container) return;
+            
+            const days = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+            const meals = ['Sáng', 'Trưa', 'Tối'];
+            
+            container.innerHTML = '';
+            
+            days.forEach((day, dayIndex) => {
+                const dayCard = document.createElement('div');
+                dayCard.className = 'bg-white rounded-2xl shadow-lg p-6 mb-6';
+                
+                let dayHTML = `
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-xl font-bold text-gray-900">${day}</h4>
+                        <div class="text-sm text-gray-500">
+                            <span class="font-semibold text-viet-red">1,950</span> calories
+                        </div>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-4">
+                `;
+                
+                meals.forEach(meal => {
+                    const randomDish = dishes[Math.floor(Math.random() * dishes.length)];
+                    dayHTML += `
+                        <div class="meal-plan-item">
+                            <div class="flex items-center space-x-3 mb-3">
+                                <div class="text-2xl">${randomDish.image}</div>
+                                <div>
+                                    <div class="font-semibold text-gray-900">${meal}</div>
+                                    <div class="text-sm text-gray-500">${randomDish.name}</div>
+                                </div>
+                            </div>
+                            <div class="text-xs text-gray-600 mb-2">${randomDish.calories} calories • ${randomDish.protein}g protein</div>
+                            <div class="flex space-x-2">
+                                <button class="bg-viet-red text-white px-3 py-1 rounded-lg text-xs hover:bg-red-600 transition-all">
+                                    Nấu ngay
+                                </button>
+                                <button class="bg-gray-100 text-gray-700 px-3 py-1 rounded-lg text-xs hover:bg-gray-200 transition-all">
+                                    Thay đổi
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                dayHTML += '</div>';
+                dayCard.innerHTML = dayHTML;
+                container.appendChild(dayCard);
+            });
+        }
+
+        // Recipes system
+        function initializeRecipes() {
+            const searchInput = document.getElementById('recipeSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', displayRecipes);
+            }
+            
+            ['recipeCategory', 'recipeDifficulty', 'recipeServings'].forEach(filterId => {
+                const element = document.getElementById(filterId);
+                if (element) {
+                    element.addEventListener('change', displayRecipes);
+                }
+            });
+        }
+
+        function displayRecipes() {
+            const container = document.getElementById('recipeGrid');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            recipes.forEach(recipe => {
+                const recipeCard = document.createElement('div');
+                recipeCard.className = 'bg-white rounded-2xl shadow-lg overflow-hidden card-hover cursor-pointer';
+                
+                recipeCard.innerHTML = `
+                    <div class="p-6">
+                        <div class="text-6xl text-center mb-4">${recipe.image}</div>
+                        <h4 class="font-bold text-lg mb-2">${recipe.name}</h4>
+                        <p class="text-gray-600 text-sm mb-4">${recipe.description}</p>
+                        
+                        <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
+                            <span>⏱️ ${recipe.time} phút</span>
+                            <span>👥 ${recipe.servings} người</span>
+                            <span>⭐ ${recipe.rating}</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex space-x-1">
+                                ${recipe.tags.slice(0, 2).map(tag => 
+                                    `<span class="bg-viet-gold/20 text-viet-gold px-2 py-1 rounded-full text-xs">#${tag}</span>`
+                                ).join('')}
+                            </div>
+                            <button class="bg-viet-red text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-red-600 transition-all" onclick="viewRecipeDetail(${recipe.id})">
+                                Xem chi tiết
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(recipeCard);
+            });
+        }
+
+        // Health system
+        function initializeHealth() {
+            updateHealthData();
+        }
+
+        function updateHealthData() {
+            const mealHistory = document.getElementById('mealHistory');
+            if (!mealHistory) return;
+            
+            const todayMeals = [
+                { time: '07:30', meal: 'Sáng', dish: 'Phở Bò', calories: 350, image: '🍜' },
+                { time: '12:15', meal: 'Trưa', dish: 'Salad Quinoa', calories: 280, image: '🥗' },
+                { time: '15:30', meal: 'Snack', dish: 'Smoothie', calories: 150, image: '🥤' }
+            ];
+            
+            mealHistory.innerHTML = '';
+            
+            todayMeals.forEach(meal => {
+                const mealItem = document.createElement('div');
+                mealItem.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-xl';
+                
+                mealItem.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <div class="text-3xl">${meal.image}</div>
+                        <div>
+                            <div class="font-semibold">${meal.dish}</div>
+                            <div class="text-sm text-gray-500">${meal.time} • ${meal.meal}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-bold text-viet-red">${meal.calories}</div>
+                        <div class="text-xs text-gray-500">calories</div>
+                    </div>
+                `;
+                
+                mealHistory.appendChild(mealItem);
+            });
+        }
+
+        // Community system
+        function initializeCommunity() {
+            displayCommunityPosts();
+        }
+
+        function displayCommunityPosts() {
+            const container = document.getElementById('communityFeed');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            communityPosts.forEach(post => {
+                const postCard = document.createElement('div');
+                postCard.className = 'community-post';
+                
+                postCard.innerHTML = `
+                    <div class="flex items-start space-x-4 mb-4">
+                        <div class="text-3xl">${post.avatar}</div>
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <span class="font-semibold">${post.author}</span>
+                                <span class="text-sm text-gray-500">${post.time}</span>
+                            </div>
+                            <h4 class="font-bold text-lg mb-2">${post.title}</h4>
+                            <p class="text-gray-600 mb-3">${post.content}</p>
+                            
+                            ${post.image ? `<div class="text-6xl text-center my-4">${post.image}</div>` : ''}
+                            
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                ${post.tags.map(tag => 
+                                    `<span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">#${tag}</span>`
+                                ).join('')}
+                            </div>
+                            
+                            <div class="flex items-center space-x-6 text-sm text-gray-500">
+                                <button class="flex items-center space-x-1 hover:text-viet-red transition-all">
+                                    <span>👍</span>
+                                    <span>${post.likes}</span>
+                                </button>
+                                <button class="flex items-center space-x-1 hover:text-viet-red transition-all">
+                                    <span>💬</span>
+                                    <span>${post.comments}</span>
+                                </button>
+                                <button class="flex items-center space-x-1 hover:text-viet-red transition-all">
+                                    <span>📤</span>
+                                    <span>${post.shares}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(postCard);
+            });
+        }
+
+        // Utility functions
+        function getMoodText(mood) {
+            const texts = {
+                sad: 'buồn bã',
+                tired: 'mệt mỏi',
+                stressed: 'căng thẳng',
+                happy: 'vui vẻ',
+                excited: 'hứng khởi',
+                normal: 'bình thường'
+            };
+            return texts[mood] || mood;
+        }
+
+        function getRegionText(region)<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'971b4ef5a045ddc2',t:'MTc1NTYyMzg4OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
